@@ -39,7 +39,7 @@ fn main() {
     // TODO: think of how to keep it flexible for development
     let endpoint = match &std::env::var("TY_API_ENDPOINT") {
         Ok(env_var) => env_var.clone(),
-        _ => "https://ty.paulweissenbach.com/v0".to_string(),
+        _ => "http://ty.paulweissenbach.com/v0".to_string(),
     };
 
     let response = reqwest::blocking::Client::new()

@@ -23,7 +23,7 @@ services:
     build: ./
     container_name: tyserver
     environment: 
-      DATABASE_URL: postgres://thank_you:3489jdfjjksi3weuasbn283dfhjd@typg/thank_you
+      DATABASE_URL: ${DATABASE_URL}
       PORT: 8902
     depends_on: 
       - typg

@@ -1,0 +1,46 @@
+{
+  "db": "PostgreSQL",
+  "0f45c89ab3bb7171c2a594e653ee7a39f8af247c8d52a86791ea2c38160b4809": {
+    "query": "\n        INSERT INTO ty (program, note)\n        VALUES ($1, $2)\n        ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "700a546314284314a9d7f56d20c231ba1d5cc7d93ed8d982ed5594667a31c117": {
+    "query": "SELECT COUNT(*) as \"count!\" FROM ty WHERE program = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count!",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "aba68ff2202b0e26ace73cb59f7f5d16efd958c3c2e0864b4ed3de6fe8c2b639": {
+    "query": "\n        CREATE TABLE IF NOT EXISTS ty (\n            id BIGSERIAL PRIMARY KEY,\n            program TEXT NOT NULL,\n            note TEXT,\n            created TIMESTAMP DEFAULT now()\n        );\n    ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": []
+    }
+  }
+}

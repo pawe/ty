@@ -1,0 +1,38 @@
+version: "3"
+networks:
+  backend:
+    driver: bridge
+
+
+services:
+  typg:
+    image: "postgres:12"
+    container_name: "typg"
+    environment: 
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: thank_you
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+  tyserver:
+    build: ./
+    container_name: tyserver
+    environment: 
+      DATABASE_URL: postgres://thank_you:3489jdfjjksi3weuasbn283dfhjd@typg/thank_you
+      PORT: 8902
+    depends_on: 
+      - typg
+    networks:
+      - backend
+    ports:
+      - "8902:8902"
+    restart:
+      unless-stopped
+
+volumes:
+  dbdata:

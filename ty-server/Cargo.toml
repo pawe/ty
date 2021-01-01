@@ -1,0 +1,17 @@
+[package]
+name = "ty-server"
+version = "0.1.0"
+authors = ["Paul Weißenbach <paul.weissenbach@aon.at>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ty-lib = { path = "../ty-lib" }
+tokio = { version = "0.2", features = ["full"] }
+warp = "0.2"
+http = "0.2"
+anyhow = "1.0.37"
+dotenv = "0.15"
+sqlx = { version = "0.4.2", default-features = false, features = ["runtime-tokio-rustls","macros", "postgres", "offline", "chrono"]}
+comrak = "0.8"

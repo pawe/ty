@@ -1,0 +1,3 @@
+[workspace]
+members = ["ty-lib", "ty-server", "ty-cli"]
+

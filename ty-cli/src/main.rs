@@ -5,6 +5,7 @@ use dotenv::dotenv;
 
 use ty_lib::ThankYouMessage;
 
+
 fn main() {
     dotenv().ok();
 
@@ -36,19 +37,40 @@ fn main() {
         note,
     };
     
-    // TODO: think of how to keep it flexible for development
-    let endpoint = match &std::env::var("TY_API_ENDPOINT") {
-        Ok(env_var) => env_var.clone(),
-        _ => "http://ty.paulweissenbach.com/v0".to_string(),
-    };
-
-    let response = reqwest::blocking::Client::new()
-        .post(&(endpoint + "/note"))
-        .timeout(core::time::Duration::new(7, 0)) // no one has time to wait
-        .json(&message)
-        .send();
-
-    if response.is_err() || response.unwrap().status() != reqwest::StatusCode::CREATED {
-        println!("Faild to collect your thank you note. Please try again later.")
+    use validator::Validate;
+    match message.validate() {
+        Ok(()) => send_ty_note(message),
+        Err(e) => {
+            for (_field, validation_error_kind) in e.errors() {
+                use validator::ValidationErrorsKind::{Field};
+                match validation_error_kind {
+                    Field(val_errors) => {
+                        for val_error in val_errors {
+                            println!("{}", val_error.message.as_ref().expect("There was an error, but we have no error message for it. Stupid, right!"))
+                        }
+                    },
+                    _ => unimplemented!("Sorry, something unexpected happened!")
+                }
+            }
+        },
     }
+
+}
+
+fn send_ty_note(message: ThankYouMessage) -> () {
+        // TODO: think of how to keep it flexible for development
+        let endpoint = match &std::env::var("TY_API_ENDPOINT") {
+            Ok(env_var) => env_var.clone(),
+            _ => "http://ty.paulweissenbach.com/v0".to_string(),
+        };
+    
+        let response = reqwest::blocking::Client::new()
+            .post(&(endpoint + "/note"))
+            .timeout(core::time::Duration::new(7, 0)) // no one has time to wait
+            .json(&message)
+            .send();
+    
+        if response.is_err() || response.unwrap().status() != reqwest::StatusCode::CREATED {
+            println!("Faild to collect your thank you note. Please try again later.")
+        }
 }

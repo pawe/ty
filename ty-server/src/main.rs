@@ -68,7 +68,14 @@ fn with_db(db_pool: Pool<Postgres>) -> impl Filter<Extract = (Pool<Postgres>,), 
     warp::any().map(move || db_pool.clone())
 }
 
-async fn handle_post_ty_note(pool: Pool<Postgres>, ty_message: ThankYouMessage) -> Result<impl Reply, Rejection> {       
+async fn handle_post_ty_note(pool: Pool<Postgres>, ty_message: ThankYouMessage) -> Result<impl Reply, Rejection> {
+    use validator::Validate;
+    let validation_result = ty_message.validate();
+    if validation_result.is_err() {
+        let json = warp::reply::json(&validation_result.err().unwrap());
+        return Ok(warp::reply::with_status(json, StatusCode::BAD_REQUEST));
+    }
+
     match sqlx::query!(
         r#"
         INSERT INTO ty (program, note)
@@ -79,8 +86,8 @@ async fn handle_post_ty_note(pool: Pool<Postgres>, ty_message: ThankYouMessage) 
     )
     .execute(&pool)
     .await {
-        Ok(_) => Ok(StatusCode::CREATED),
-        Err(_) => Ok(StatusCode::INTERNAL_SERVER_ERROR),
+        Ok(_) => Ok(warp::reply::with_status(warp::reply::json(&""), StatusCode::CREATED)),
+        Err(_) => Ok(warp::reply::with_status(warp::reply::json(&""), StatusCode::INTERNAL_SERVER_ERROR)),
     }
 }
 

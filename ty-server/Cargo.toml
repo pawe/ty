@@ -16,3 +16,5 @@ dotenv = "0.15"
 sqlx = { version = "0.4.2", default-features = false, features = ["runtime-tokio-rustls","macros", "postgres", "offline", "chrono"]}
 comrak = "0.8"
 validator = "0.12"
+serde = "1.0" 
+serde_json = "1.0"

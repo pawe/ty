@@ -1,3 +1,4 @@
+use validator::Validate;
 use warp::{Filter, Reply, Rejection};
 use std::convert::Infallible;
 use http::StatusCode;
@@ -5,6 +6,7 @@ use dotenv::dotenv;
 use std::env;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use comrak::{markdown_to_html, ComrakOptions};
+use serde::de::DeserializeOwned;
 
 use ty_lib::ThankYouMessage;
 
@@ -43,9 +45,11 @@ async fn main() -> anyhow::Result<()> {
         .and(warp::post()
             .and(warp::body::content_length_limit(4096))
             .and(with_db(db_pool.clone()))
-            .and(warp::body::json())
+            .and(validate_json())
             .and_then(handle_post_ty_note)
-        );
+            .recover(handle_rejection)
+        )
+        ;
 
     let count = warp::path!("v0" / "tool" / String)
         .and(with_db(db_pool.clone()))
@@ -68,18 +72,49 @@ fn with_db(db_pool: Pool<Postgres>) -> impl Filter<Extract = (Pool<Postgres>,), 
     warp::any().map(move || db_pool.clone())
 }
 
-async fn handle_post_ty_note(pool: Pool<Postgres>, ty_message: ThankYouMessage) -> Result<impl Reply, Rejection> {
-    use validator::Validate;
-    let validation_result = ty_message.validate();
-    if validation_result.is_err() {
-        let json = warp::reply::json(&validation_result.err().unwrap());
-        return Ok(warp::reply::with_status(json, StatusCode::BAD_REQUEST));
+
+fn validate_json<T>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy  where 
+    T: DeserializeOwned + Validate + Send {
+    warp::body::json().and_then(|json: T| async move {
+        let validation_result = json.validate();
+        if validation_result.is_err() {
+            Err(warp::reject::custom(TYValidationError::new(validation_result.err().unwrap())))
+        } else {
+            return Ok(json);
+        }
+    })
+}
+
+#[derive(Debug)]
+struct TYValidationError {
+    errors: validator::ValidationErrors,
+}
+
+impl TYValidationError {
+    fn new(errors: validator::ValidationErrors) -> Self {
+        TYValidationError {
+            errors,
+        }
+    }
+}
+
+impl warp::reject::Reject for TYValidationError {}
+
+async fn handle_rejection(err: Rejection) -> Result<impl Reply, Rejection> {
+    if let Some(e) = err.find::<TYValidationError>() {
+        Ok(warp::reply::with_status(warp::reply::json(&e.errors), StatusCode::BAD_REQUEST))
+    } else {
+        Err(err)
+
     }
 
+}
+
+async fn handle_post_ty_note(pool: Pool<Postgres>, ty_message: ThankYouMessage) -> Result<impl Reply, Rejection> {
     match sqlx::query!(
         r#"
-        INSERT INTO ty (program, note)
-        VALUES ($1, $2)
+            INSERT INTO ty (program, note)
+            VALUES ($1, $2)
         "#,
         ty_message.program,
         ty_message.note

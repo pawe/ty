@@ -45,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
         .and(warp::post()
             .and(warp::body::content_length_limit(4096))
             .and(with_db(db_pool.clone()))
-            .and(validate_json())
+            .and(validated_from_json())
             .and_then(handle_post_ty_note)
             .recover(handle_rejection)
         )
@@ -73,7 +73,7 @@ fn with_db(db_pool: Pool<Postgres>) -> impl Filter<Extract = (Pool<Postgres>,), 
 }
 
 
-fn validate_json<T>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy  where 
+fn validated_from_json<T>() -> impl Filter<Extract = (T,), Error = Rejection> + Copy  where 
     T: DeserializeOwned + Validate + Send {
     warp::body::json().and_then(|json: T| async move {
         let validation_result = json.validate();

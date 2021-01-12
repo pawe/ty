@@ -1,7 +1,7 @@
 {
   "db": "PostgreSQL",
-  "0f45c89ab3bb7171c2a594e653ee7a39f8af247c8d52a86791ea2c38160b4809": {
-    "query": "\n        INSERT INTO ty (program, note)\n        VALUES ($1, $2)\n        ",
+  "28840f7e7662d7027c279f74711c86d13052d2f8f5b69e105e47412bc385ed31": {
+    "query": "\n            INSERT INTO ty (program, note)\n            VALUES ($1, $2)\n        ",
     "describe": {
       "columns": [],
       "parameters": {

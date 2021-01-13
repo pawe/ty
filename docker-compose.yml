@@ -1,8 +1,9 @@
 version: "3.4"
 networks:
   backend:
-    driver: bridge
-
+    external: false
+  web:
+    external: true
 
 services:
   typg:
@@ -11,7 +12,7 @@ services:
     environment: 
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: thank_you
+      POSTGRES_DB: ${DATABASE_DB} 
     expose:
       - "5432"
     networks:
@@ -31,32 +32,41 @@ services:
     depends_on: 
       - typg
     networks:
+      - web
       - backend
-    # ports:
-    #   - "8902:8902"
+    ports:
+      - "8001:80"
     restart:
       unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tyserver.rule=Host(`ty.paulweissenbach.com`)"
-      - "traefik.http.routers.tyserver.entrypoints=web"
-      - "traefik.http.routers.tyserver.entrypoints=websecure"
-      - "traefik.http.routers.tyserver.tls.certresolver=myresolver"
+      - "traefik.http.routers.tyserver-web.rule=Host(`ty.paulweissenbach.com`)"
+      - "traefik.http.routers.tyserver-web.entrypoints=web"
+      - "traefik.port=80" 
+      - "traefik.http.routers.tyserver-secured.rule=Host(`ty.paulweissenbach.com`)"
+      - "traefik.http.routers.tyserver-secured.entrypoints=websecure"
+      - "traefik.http.routers.tyserver-secured.tls=true"
+      - "traefik.http.routers.tyserver-secured.tls.certresolver=myresolver"
 
   traefik:
     image: "traefik:v2.3"
     container_name: "traefik"
     command:
       - "--log.level=DEBUG"
-      - "--api.insecure=true"
+        #- "--api.insecure=true"
+      - "--api.debug=true"
+      - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=web"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+        # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
       - "--certificatesresolvers.myresolver.acme.email=paul.weissenbach@aon.at"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    networks:
+      - web 
     ports:
       - "80:80"
       - "443:443"

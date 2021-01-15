@@ -2217,6 +2217,7 @@ dependencies = [
  "clap",
  "dotenv",
  "openssl",
+ "openssl-probe",
  "reqwest",
  "serde",
  "serde_json",

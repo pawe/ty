@@ -62,7 +62,7 @@ fn send_ty_note(message: ThankYouMessage) -> () {
         // TODO: think of how to keep it flexible for development
         let endpoint = match &std::env::var("TY_API_ENDPOINT") {
             Ok(env_var) => env_var.clone(),
-            _ => "http://ty.paulweissenbach.com/v0".to_string(),
+            _ => "https://ty.paulweissenbach.com/v0".to_string(),
         };
     
         let response = reqwest::blocking::Client::new()
@@ -70,7 +70,7 @@ fn send_ty_note(message: ThankYouMessage) -> () {
             .timeout(core::time::Duration::new(7, 0)) // no one has time to wait
             .json(&message)
             .send();
-    
+        
         if response.is_err() || response.unwrap().status() != reqwest::StatusCode::CREATED {
             println!("Faild to collect your thank you note. Please try again later.")
         }

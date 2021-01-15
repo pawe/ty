@@ -36,8 +36,7 @@ services:
       - web
       - backend
     labels:
-      - "traefik.port=80" 
-
+      - "traefik.http.services.tyserver.loadbalancer.server.port=80" 
 
   tytraefik:
     image: "traefik:v2.3"

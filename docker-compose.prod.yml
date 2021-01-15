@@ -1,0 +1,51 @@
+version: "3.4"
+
+services:
+  tyserver:
+    build: 
+      context: .
+      dockerfile: ty-server/Dockerfile
+      target: tyserver
+    container_name: tyserver
+    environment: 
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on: 
+      - typg
+    networks:
+      - web
+      - backend
+    restart:
+      unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tyserver-web.rule=Host(`ty.paulweissenbach.com`)"
+      - "traefik.http.routers.tyserver-web.entrypoints=web"
+      - "traefik.http.routers.tyserver-secured.rule=Host(`ty.paulweissenbach.com`)"
+      - "traefik.http.routers.tyserver-secured.entrypoints=websecure"
+      - "traefik.http.routers.tyserver-secured.tls=true"
+      - "traefik.http.routers.tyserver-secured.tls.certresolver=myresolver"
+
+  tytraefik:
+    image: "traefik:v2.3"
+    container_name: "tytraefik"
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=web"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=paul.weissenbach@aon.at"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    networks:
+      - web 
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+
+volumes:
+  dbdata:

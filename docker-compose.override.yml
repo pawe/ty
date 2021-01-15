@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+  typg:
+    ports:
+      - "5432:5432"
+  
+  
+  tyserver:
+      ports:
+      - "8001:80"
+      labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tyserver-web.rule=Host(`ty.localhost`)"
+      - "traefik.http.routers.tyserver-web.entrypoints=web"
+
+  tytraefik:
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--api.debug=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=web"
+      - "--entrypoints.web.address=:80"
+    networks:
+      - web

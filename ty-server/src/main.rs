@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("Cannot connect to postgres");
 
-    setup_database(db_pool.clone()).await?;
+    setup_database(db_pool.clone()).await.expect("seting up database failed");
 
     let index = warp::path::end()
         .map(|| 

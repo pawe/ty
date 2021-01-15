@@ -2,12 +2,13 @@ extern crate clap;
 use clap::{Arg, App};
 use reqwest;
 use dotenv::dotenv;
-
+use openssl_probe;
 use ty_lib::ThankYouMessage;
 
 
 fn main() {
     dotenv().ok();
+    openssl_probe::init_ssl_cert_env_vars();
 
     let matches = App::new("ty - thank you")
         .version("0.1")

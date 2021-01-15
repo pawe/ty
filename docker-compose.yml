@@ -1,4 +1,5 @@
 version: "3.4"
+
 networks:
   backend:
     external: false
@@ -34,45 +35,19 @@ services:
     networks:
       - web
       - backend
-    ports:
-      - "8001:80"
-    restart:
-      unless-stopped
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.tyserver-web.rule=Host(`ty.paulweissenbach.com`)"
-      - "traefik.http.routers.tyserver-web.entrypoints=web"
       - "traefik.port=80" 
-      - "traefik.http.routers.tyserver-secured.rule=Host(`ty.paulweissenbach.com`)"
-      - "traefik.http.routers.tyserver-secured.entrypoints=websecure"
-      - "traefik.http.routers.tyserver-secured.tls=true"
-      - "traefik.http.routers.tyserver-secured.tls.certresolver=myresolver"
 
-  traefik:
+
+  tytraefik:
     image: "traefik:v2.3"
-    container_name: "traefik"
-    command:
-      - "--log.level=DEBUG"
-        #- "--api.insecure=true"
-      - "--api.debug=true"
-      - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=web"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-        # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
-      - "--certificatesresolvers.myresolver.acme.email=paul.weissenbach@aon.at"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    container_name: "tytraefik"
     networks:
       - web 
     ports:
       - "80:80"
-      - "443:443"
       - "8080:8080"
     volumes:
-      - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
 volumes:

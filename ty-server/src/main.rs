@@ -57,7 +57,7 @@ async fn main() -> anyhow::Result<()> {
 
     
     let port: u16 =  env::var("PORT")
-        .unwrap_or("8901".to_string())
+        .unwrap_or_else(|_| "8901".to_string())
         .parse()
         .expect("coudln't parse PORT into u16");
     
@@ -80,7 +80,7 @@ fn validated_from_json<T>() -> impl Filter<Extract = (T,), Error = Rejection> + 
         if validation_result.is_err() {
             Err(warp::reject::custom(TYValidationError::new(validation_result.err().unwrap())))
         } else {
-            return Ok(json);
+            Ok(json)
         }
     })
 }

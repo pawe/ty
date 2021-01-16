@@ -1,8 +1,6 @@
 extern crate clap;
 use clap::{Arg, App};
-use reqwest;
 use dotenv::dotenv;
-use openssl_probe;
 use ty_lib::ThankYouMessage;
 
 
@@ -42,7 +40,7 @@ fn main() {
     match message.validate() {
         Ok(()) => send_ty_note(message),
         Err(e) => {
-            for (_field, validation_error_kind) in e.errors() {
+            for validation_error_kind in e.errors().values() {
                 use validator::ValidationErrorsKind::{Field};
                 match validation_error_kind {
                     Field(val_errors) => {
@@ -58,7 +56,7 @@ fn main() {
 
 }
 
-fn send_ty_note(message: ThankYouMessage) -> () {
+fn send_ty_note(message: ThankYouMessage) {
         // TODO: think of how to keep it flexible for development
         let endpoint = match &std::env::var("TY_API_ENDPOINT") {
             Ok(env_var) => env_var.clone(),

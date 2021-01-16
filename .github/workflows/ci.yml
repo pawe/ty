@@ -16,6 +16,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
+          args: -- --no-deps 
 
   test:
     name: Test Suite
@@ -63,6 +64,6 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: -- -D warnings --no-deps 
         env:
           SQLX_OFFLINE: true

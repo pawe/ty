@@ -1,15 +1,21 @@
-use serde::{Serialize, Deserialize};
-use validator::{Validate};
+use serde::{Deserialize, Serialize};
+use validator::Validate;
 
 #[derive(Validate, Serialize, Deserialize, Debug)]
 pub struct ThankYouMessage {
     #[validate(
         length(min = 1, message = "Input needs to be at least one character long"),
-        length(max = 50, message = "Tool name can't be longer than 50 characters, sorry!")
+        length(
+            max = 50,
+            message = "Tool name can't be longer than 50 characters, sorry!"
+        )
     )]
     pub program: String,
 
-    #[validate(length(max = 2048, message = "Note too long! Please keep it under 2048 characters."))]
+    #[validate(length(
+        max = 2048,
+        message = "Note too long! Please keep it under 2048 characters."
+    ))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
 }

@@ -2,8 +2,8 @@ name: Relase ty
 
 on:
   push:
-#    tags:
-#      - 'v*.*.*'
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build:

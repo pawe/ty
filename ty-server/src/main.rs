@@ -8,7 +8,7 @@ use std::env;
 use validator::Validate;
 use warp::{Filter, Rejection, Reply};
 
-use ty_lib::ThankYouMessage;
+use ty_lib::{ThankYouMessage, ThankYouStats, ThankYouDetail};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -38,6 +38,9 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("seting up database failed");
 
+    let spa = warp::path("spa")
+        .and(warp::fs::dir("/home/pawe/Projects/ty-thank-you/ty-spa/static"));
+
     let index = warp::path::end().map(|| {
         warp::reply::html(markdown_to_html(
             include_str!("../../README.md"),
@@ -54,16 +57,38 @@ async fn main() -> anyhow::Result<()> {
             .recover(handle_rejection),
     );
 
+    let info = warp::path("v0").and(
+        warp::get()
+            .and(warp::path::end()
+                .and(with_db(db_pool.clone()))
+                .and_then(handle_info)
+        )
+    );
+
     let count = warp::path!("v0" / "tool" / String)
         .and(with_db(db_pool.clone()))
         .and_then(handle_count);
+
+    let detail = warp::path!("v0" / "tool" / String / "detail")
+        .and(with_db(db_pool.clone()))
+        .and_then(handle_detail);
 
     let port: u16 = env::var("PORT")
         .unwrap_or_else(|_| "8901".to_string())
         .parse()
         .expect("coudln't parse PORT into u16");
 
-    warp::serve(warp::any().and(index.or(ty).or(count)).with(log))
+    warp::serve( warp::any()
+            .and(
+                index
+                    .or(spa)
+                    .or(ty)
+                    .or(info)
+                    .or(count)
+                    .or(detail)
+            )
+                .with(log)
+        )
         .run(([0, 0, 0, 0], port))
         .await;
 
@@ -104,6 +129,12 @@ impl TYValidationError {
 }
 
 impl warp::reject::Reject for TYValidationError {}
+
+
+#[derive(Debug)]
+struct TYDatabaseError {}
+
+impl warp::reject::Reject for TYDatabaseError {}
 
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, Rejection> {
     if let Some(e) = err.find::<TYValidationError>() {
@@ -153,8 +184,61 @@ async fn handle_count(tool: String, pool: Pool<Postgres>) -> Result<impl Reply, 
     if let Ok(rec) = res {
         Ok(rec.count.to_string())
     } else {
+        // that is not a proper way to handle errors!
         Ok(0.to_string())
     }
+}
+
+async fn handle_info(pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
+    let res = sqlx::query_as!(ThankYouStats,
+        r#"
+            select 
+                ty."program", 
+                count(*) as "count!", 
+                count(ty.note) as "note_count!"
+            from public.ty 
+            group by ty."program"
+            order by "count!" desc
+            limit 200;
+        "#
+    ).fetch_all(&pool)
+    .await;
+
+    if let Ok(stats) = res {
+        Ok(warp::reply::with_status(warp::reply::json(&stats), StatusCode::OK))
+    } else {
+        Err(warp::reject::custom(TYDatabaseError {}))
+    }
+    
+}
+
+async fn handle_detail(program: String, pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
+    let res = sqlx::query!(
+        r#"
+            select ty.note as "note!"
+            from public.ty 
+            where ty.note is not null
+                and ty.program = $1
+            limit 200;
+        "#,
+        program
+    ).fetch_all(&pool)
+    .await;
+
+    if let Ok(records) = res {
+        let notes = records.iter().map(|row| row.note.to_string()).collect();
+
+        let detail = ThankYouDetail {
+            program,
+            notes,
+        };
+
+        Ok(warp::reply::with_status(warp::reply::json(&detail), StatusCode::OK))
+    } else {
+        Err(warp::reject::reject())
+        // Ok(warp::reply::with_status(warp::reply::json(&""), StatusCode::INTERNAL_SERVER_ERROR))
+    }
+    
 }
 
 async fn setup_database(pool: Pool<Postgres>) -> anyhow::Result<(), sqlx::Error> {
@@ -162,8 +246,8 @@ async fn setup_database(pool: Pool<Postgres>) -> anyhow::Result<(), sqlx::Error>
         r#"
         CREATE TABLE IF NOT EXISTS ty (
             id BIGSERIAL PRIMARY KEY,
-            program TEXT NOT NULL,
-            note TEXT,
+            program VARCHAR(50) NOT NULL,
+            note VARCHAR(2048),
             created TIMESTAMP DEFAULT now()
         );
     "#

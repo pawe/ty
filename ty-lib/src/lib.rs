@@ -20,6 +20,19 @@ pub struct ThankYouMessage {
     pub note: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ThankYouStats {
+    pub program: String,
+    pub count: i64,
+    pub note_count: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ThankYouDetail {
+    pub program: String,
+    pub notes: Vec<String>,
+}
+
 #[test]
 fn program_length_good() {
     let ty_message = ThankYouMessage {

@@ -96,7 +96,8 @@ impl Component for Detail {
             }
             GetDetails => {
                 let url = format!(
-                    "http://localhost:8901/v0/tool/{}/detail",
+                    "{}/v0/tool/{}/detail",
+                    super::BASEURL.clone(),
                     encode(&self.query)
                 );
                 let request = Request::get(url)

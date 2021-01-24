@@ -7,6 +7,12 @@ mod list;
 use detail::Detail;
 use list::FetchServiceExample;
 
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref BASEURL: String = "https://ty.paulweissenbach.com".into();
+}
+
 struct Model {}
 
 impl Component for Model {

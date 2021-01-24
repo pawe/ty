@@ -69,7 +69,7 @@ impl Component for FetchServiceExample {
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let request = Request::get("http://localhost:8901/v0")
+        let request = Request::get(super::BASEURL.clone() + "/v0")
             .body(Nothing)
             .expect("Could not build request.");
         let callback = link.callback(

@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
         .expect("seting up database failed");
 
     let spa = warp::path("spa")
-        .and(warp::fs::dir("/home/pawe/Projects/ty-thank-you/ty-spa/static"));
+        .and(warp::fs::dir(env::var("STATIC_DIR").expect("STATIC_DIR expected in environment")));
 
     let index = warp::path::end().map(|| {
         warp::reply::html(markdown_to_html(
@@ -182,7 +182,7 @@ async fn handle_count(program: String, pool: Pool<Postgres>) -> Result<impl Repl
             return Err(warp::reject::reject());
         }
     };
-    
+
     let res = sqlx::query!(
         r#"SELECT COUNT(*) as "count!" FROM ty WHERE program = $1"#,
         program

@@ -7,6 +7,7 @@ use std::convert::Infallible;
 use std::env;
 use validator::Validate;
 use warp::{Filter, Rejection, Reply};
+use urlencoding::decode;
 
 use ty_lib::{ThankYouMessage, ThankYouStats, ThankYouDetail};
 
@@ -173,10 +174,18 @@ async fn handle_post_ty_note(
     }
 }
 
-async fn handle_count(tool: String, pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
+async fn handle_count(program: String, pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
+    let program = match decode(&program) {
+        Ok(p) => p,
+        Err(err) => {
+            dbg!(err);
+            return Err(warp::reject::reject());
+        }
+    };
+    
     let res = sqlx::query!(
         r#"SELECT COUNT(*) as "count!" FROM ty WHERE program = $1"#,
-        tool
+        program
     )
     .fetch_one(&pool)
     .await;
@@ -213,6 +222,14 @@ async fn handle_info(pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
 }
 
 async fn handle_detail(program: String, pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
+    let program = match decode(&program) {
+        Ok(p) => p,
+        Err(err) => {
+            dbg!(err);
+            return Err(warp::reject::reject());
+        }
+    };
+
     let res = sqlx::query!(
         r#"
             select ty.note as "note!"

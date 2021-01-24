@@ -2339,6 +2339,7 @@ dependencies = [
  "sqlx",
  "tokio",
  "ty-lib",
+ "urlencoding",
  "validator",
  "warp",
 ]
@@ -2351,6 +2352,7 @@ dependencies = [
  "serde",
  "serde_json",
  "ty-lib",
+ "urlencoding",
  "wasm-bindgen",
  "yew",
 ]

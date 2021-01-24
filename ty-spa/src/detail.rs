@@ -5,6 +5,7 @@ use yew::{
 };
 use yew::{Component, ComponentLink, Html, InputData, ShouldRender};
 use yew::{events::KeyboardEvent};
+use urlencoding::encode;
 
 use ty_lib::ThankYouDetail;
 
@@ -94,7 +95,7 @@ impl Component for Detail {
               true
             },
             GetDetails => {
-                let url = format!("http://localhost:8901/v0/tool/{}/detail", self.query);
+                let url = format!("http://localhost:8901/v0/tool/{}/detail", encode(&self.query));
                 let request = Request::get(url)
                     .body(Nothing)
                     .expect("Could not build request.");

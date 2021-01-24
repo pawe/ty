@@ -1,11 +1,11 @@
+use urlencoding::encode;
+use yew::events::KeyboardEvent;
 use yew::{
     format::{Json, Nothing},
     prelude::*,
     services::fetch::{FetchService, FetchTask, Request, Response},
 };
 use yew::{Component, ComponentLink, Html, InputData, ShouldRender};
-use yew::{events::KeyboardEvent};
-use urlencoding::encode;
 
 use ty_lib::ThankYouDetail;
 
@@ -91,11 +91,14 @@ impl Component for Detail {
         use Msg::*;
         match msg {
             UpdateQuery(query) => {
-              self.query = query;
-              true
-            },
+                self.query = query;
+                true
+            }
             GetDetails => {
-                let url = format!("http://localhost:8901/v0/tool/{}/detail", encode(&self.query));
+                let url = format!(
+                    "http://localhost:8901/v0/tool/{}/detail",
+                    encode(&self.query)
+                );
                 let request = Request::get(url)
                     .body(Nothing)
                     .expect("Could not build request.");

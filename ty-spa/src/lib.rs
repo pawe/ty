@@ -1,11 +1,11 @@
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 
-mod list;
 mod detail;
+mod list;
 
-use list::FetchServiceExample;
 use detail::Detail;
+use list::FetchServiceExample;
 
 struct Model {}
 

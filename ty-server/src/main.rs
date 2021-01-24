@@ -5,11 +5,11 @@ use serde::de::DeserializeOwned;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::convert::Infallible;
 use std::env;
+use urlencoding::decode;
 use validator::Validate;
 use warp::{Filter, Rejection, Reply};
-use urlencoding::decode;
 
-use ty_lib::{ThankYouMessage, ThankYouStats, ThankYouDetail};
+use ty_lib::{ThankYouDetail, ThankYouMessage, ThankYouStats};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -39,8 +39,9 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("seting up database failed");
 
-    let spa = warp::path("spa")
-        .and(warp::fs::dir(env::var("STATIC_DIR").expect("STATIC_DIR expected in environment")));
+    let spa = warp::path("spa").and(warp::fs::dir(
+        env::var("STATIC_DIR").expect("STATIC_DIR expected in environment"),
+    ));
 
     let index = warp::path::end().map(|| {
         warp::reply::html(markdown_to_html(
@@ -59,11 +60,11 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let info = warp::path("v0").and(
-        warp::get()
-            .and(warp::path::end()
+        warp::get().and(
+            warp::path::end()
                 .and(with_db(db_pool.clone()))
-                .and_then(handle_info)
-        )
+                .and_then(handle_info),
+        ),
     );
 
     let count = warp::path!("v0" / "tool" / String)
@@ -79,19 +80,13 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .expect("coudln't parse PORT into u16");
 
-    warp::serve( warp::any()
-            .and(
-                index
-                    .or(spa)
-                    .or(ty)
-                    .or(info)
-                    .or(count)
-                    .or(detail)
-            )
-                .with(log)
-        )
-        .run(([0, 0, 0, 0], port))
-        .await;
+    warp::serve(
+        warp::any()
+            .and(index.or(spa).or(ty).or(info).or(count).or(detail))
+            .with(log),
+    )
+    .run(([0, 0, 0, 0], port))
+    .await;
 
     Ok(())
 }
@@ -130,7 +125,6 @@ impl TYValidationError {
 }
 
 impl warp::reject::Reject for TYValidationError {}
-
 
 #[derive(Debug)]
 struct TYDatabaseError {}
@@ -199,7 +193,8 @@ async fn handle_count(program: String, pool: Pool<Postgres>) -> Result<impl Repl
 }
 
 async fn handle_info(pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
-    let res = sqlx::query_as!(ThankYouStats,
+    let res = sqlx::query_as!(
+        ThankYouStats,
         r#"
             select 
                 ty."program", 
@@ -210,15 +205,18 @@ async fn handle_info(pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
             order by "count!" desc
             limit 200;
         "#
-    ).fetch_all(&pool)
+    )
+    .fetch_all(&pool)
     .await;
 
     if let Ok(stats) = res {
-        Ok(warp::reply::with_status(warp::reply::json(&stats), StatusCode::OK))
+        Ok(warp::reply::with_status(
+            warp::reply::json(&stats),
+            StatusCode::OK,
+        ))
     } else {
         Err(warp::reject::custom(TYDatabaseError {}))
     }
-    
 }
 
 async fn handle_detail(program: String, pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
@@ -239,23 +237,23 @@ async fn handle_detail(program: String, pool: Pool<Postgres>) -> Result<impl Rep
             limit 200;
         "#,
         program
-    ).fetch_all(&pool)
+    )
+    .fetch_all(&pool)
     .await;
 
     if let Ok(records) = res {
         let notes = records.iter().map(|row| row.note.to_string()).collect();
 
-        let detail = ThankYouDetail {
-            program,
-            notes,
-        };
+        let detail = ThankYouDetail { program, notes };
 
-        Ok(warp::reply::with_status(warp::reply::json(&detail), StatusCode::OK))
+        Ok(warp::reply::with_status(
+            warp::reply::json(&detail),
+            StatusCode::OK,
+        ))
     } else {
         Err(warp::reject::reject())
         // Ok(warp::reply::with_status(warp::reply::json(&""), StatusCode::INTERNAL_SERVER_ERROR))
     }
-    
 }
 
 async fn setup_database(pool: Pool<Postgres>) -> anyhow::Result<(), sqlx::Error> {

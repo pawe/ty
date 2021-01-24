@@ -1,12 +1,11 @@
 // requires the serde and anyhow crates
 
+use ty_lib::ThankYouStats;
 use yew::{
     format::{Json, Nothing},
     prelude::*,
     services::fetch::{FetchService, FetchTask, Request, Response},
 };
-use ty_lib::ThankYouStats;
-
 
 #[derive(Debug)]
 pub enum Msg {
@@ -27,12 +26,14 @@ impl FetchServiceExample {
     fn view_list(&self) -> Html {
         match self.list {
             Some(ref list) => {
-                let list_element = |stats: &ThankYouStats| html!{
-                  <li>
-                    { stats.program.clone() } <span style="color: #bbb; margin-left: 12px;">{"tys: "} { stats.count } {", notes: "} { stats.note_count }</span>
-                  </li>
+                let list_element = |stats: &ThankYouStats| {
+                    html! {
+                      <li>
+                        { stats.program.clone() } <span style="color: #bbb; margin-left: 12px;">{"tys: "} { stats.count } {", notes: "} { stats.note_count }</span>
+                      </li>
+                    }
                 };
-                
+
                 html! {
                     <ul>{
                         for list.iter().map(list_element)
@@ -68,17 +69,17 @@ impl Component for FetchServiceExample {
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-      let request = Request::get("http://localhost:8901/v0")
-          .body(Nothing)
-          .expect("Could not build request.");
-      let callback =
-          link
-              .callback(|response: Response<Json<Result<Vec<ThankYouStats>, anyhow::Error>>>| {
-                  let Json(data) = response.into_body();
-                  Msg::ReceiveResponse(data)
-              });
-      let task = FetchService::fetch(request, callback).expect("failed to start request");
-     
+        let request = Request::get("http://localhost:8901/v0")
+            .body(Nothing)
+            .expect("Could not build request.");
+        let callback = link.callback(
+            |response: Response<Json<Result<Vec<ThankYouStats>, anyhow::Error>>>| {
+                let Json(data) = response.into_body();
+                Msg::ReceiveResponse(data)
+            },
+        );
+        let task = FetchService::fetch(request, callback).expect("failed to start request");
+
         Self {
             fetch_task: Some(task),
             list: None,
@@ -100,9 +101,7 @@ impl Component for FetchServiceExample {
                     Ok(list) => {
                         self.list = Some(list);
                     }
-                    Err(error) => {
-                        self.error = Some(error.to_string())
-                    }
+                    Err(error) => self.error = Some(error.to_string()),
                 }
                 self.fetch_task = None;
                 // we want to redraw so that the page displays the location of the ISS instead of
@@ -114,7 +113,7 @@ impl Component for FetchServiceExample {
     fn view(&self) -> Html {
         html! {
             <>
-                <h2>{"Most thanked programs"}</h2> 
+                <h2>{"Most thanked programs"}</h2>
                 { self.view_fetching() }
                 { self.view_list() }
                 { self.view_error() }

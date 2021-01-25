@@ -2,20 +2,31 @@
 
 Please note: This is a beginners project!
 
-A small tool to say thank you. `ty` is a command line tool, that takes a tool 
+A small tool to say thank you. `ty` is a command line tool, that takes a program 
 name as input and sends it to our thank-you server. Every once in a while, we 
 try to figure out who the authors of the thanked tools are and then try to 
 deliver the collected gratitude for their work. Optionally, it takes a message.
 
 
-## Usage
+## Install
+
+```bash
+cargo install ty
 ```
+
+You can install it with cargo (like above), or download a release build from 
+[github releases](https://github.com/pawe/ty/releases).
+
+
+## Usage
+
+```bash
 ty rustc
 ```
 
 With a message:
 
-```
+```bash
 ty rustc -m "The error message really helped me out, Cheers!"
 ```
 
@@ -23,11 +34,11 @@ ty rustc -m "The error message really helped me out, Cheers!"
 If you just want to thank the last completed command, this is alias will do the 
 trick. 
 
-```
+```bash
 alias ty='ty `history -p \!:0`'
 ```
 
-```
+```bash
 $ cargo build --release 
     Compiling ...
     Finished release [optimized] target(s) in 12.04s

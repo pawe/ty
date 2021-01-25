@@ -39,11 +39,11 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("seting up database failed");
 
-    let spa = warp::path("spa").and(warp::fs::dir(
+    let spa = warp::any().and(warp::fs::dir(
         env::var("STATIC_DIR").expect("STATIC_DIR expected in environment"),
     ));
 
-    let index = warp::path::end().map(|| {
+    let readme = warp::path("readme").map(|| {
         warp::reply::html(markdown_to_html(
             include_str!("../../README.md"),
             &ComrakOptions::default(),
@@ -82,7 +82,7 @@ async fn main() -> anyhow::Result<()> {
 
     warp::serve(
         warp::any()
-            .and(index.or(spa).or(ty).or(info).or(count).or(detail))
+            .and(readme.or(ty).or(info).or(count).or(detail).or(spa))
             .with(log),
     )
     .run(([0, 0, 0, 0], port))

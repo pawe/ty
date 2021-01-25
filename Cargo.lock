@@ -2304,7 +2304,7 @@ dependencies = [
 
 [[package]]
 name = "ty"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "clap",
  "dotenv",
@@ -2319,7 +2319,7 @@ dependencies = [
 
 [[package]]
 name = "ty-lib"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2328,7 +2328,7 @@ dependencies = [
 
 [[package]]
 name = "ty-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "comrak",
@@ -2346,9 +2346,10 @@ dependencies = [
 
 [[package]]
 name = "ty-spa"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
+ "comrak",
  "lazy_static",
  "serde",
  "serde_json",

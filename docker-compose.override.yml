@@ -9,6 +9,8 @@ services:
   tyserver:
       ports:
       - "8001:80"
+      environment: 
+        DATABASE_URL: ${DATABASE_URL_DOCKER}
       labels:
       - "traefik.enable=true"
       - "traefik.http.routers.tyserver-web.rule=Host(`ty.localhost`)"

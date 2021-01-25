@@ -1,5 +1,6 @@
+use comrak::{markdown_to_html, ComrakOptions};
 use wasm_bindgen::prelude::*;
-use yew::prelude::*;
+use yew::{prelude::*, Component, ComponentLink, Html, ShouldRender};
 
 mod detail;
 mod list;
@@ -32,8 +33,18 @@ impl Component for Model {
     }
 
     fn view(&self) -> Html {
+        // propably not a good idea to keep this in the view fn
+        let readme = yew::utils::document().create_element("div").unwrap();
+        readme.set_inner_html(&markdown_to_html(
+            include_str!("../../README.md"),
+            &ComrakOptions::default(),
+        ));
+
+        let readme_html = Html::VRef(readme.into());
+
         html! {
             <>
+                {readme_html}
                 <FetchServiceExample />
                 <Detail />
             </>

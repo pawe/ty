@@ -1,7 +1,7 @@
 {
   "db": "PostgreSQL",
-  "28840f7e7662d7027c279f74711c86d13052d2f8f5b69e105e47412bc385ed31": {
-    "query": "\n            INSERT INTO ty (program, note)\n            VALUES ($1, $2)\n        ",
+  "5087076581790186adb3c8536a7c3bc858f88d8fdc3c42fc7c0e263798ab00d7": {
+    "query": "\n                INSERT INTO ty (program, note)\n                VALUES ($1, $2)\n            ",
     "describe": {
       "columns": [],
       "parameters": {
@@ -13,38 +13,8 @@
       "nullable": []
     }
   },
-  "3d45f17ecb8904ba7242c776c84a53f84d966c511b8d86a09ee224f97506ad4c": {
-    "query": "\n            select \n                ty.\"program\", \n                count(*) as \"count!\", \n                count(ty.note) as \"note_count!\"\n            from public.ty \n            group by ty.\"program\"\n            order by \"count!\" desc\n            limit 200;\n        ",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "program",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 1,
-          "name": "count!",
-          "type_info": "Int8"
-        },
-        {
-          "ordinal": 2,
-          "name": "note_count!",
-          "type_info": "Int8"
-        }
-      ],
-      "parameters": {
-        "Left": []
-      },
-      "nullable": [
-        false,
-        null,
-        null
-      ]
-    }
-  },
-  "5ca401f6925a5a1eba36760d82c065fcb1569f555b2552a61e2df0cdcfcfce68": {
-    "query": "\n            select ty.note as \"note!\"\n            from public.ty \n            where ty.note is not null\n                and ty.program = $1\n            limit 200;\n        ",
+  "5e1d84772e47a152a64887afafabf0c6ba7ca7b9210b541bc21b8e4d257d4acf": {
+    "query": "\n                select ty.note as \"note!\"\n                from public.ty \n                where ty.note is not null\n                    and ty.program = $1\n                limit 200;\n            ",
     "describe": {
       "columns": [
         {
@@ -91,6 +61,36 @@
         "Left": []
       },
       "nullable": []
+    }
+  },
+  "a0c9e72dada4323cc83815561dc0f88fccff754df5fefd61fdb4978545fbcdd1": {
+    "query": "\n                select \n                    ty.\"program\", \n                    count(*) as \"count!\", \n                    count(ty.note) as \"note_count!\"\n                from public.ty \n                group by ty.\"program\"\n                order by \"count!\" desc\n                limit 200;\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "program",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 1,
+          "name": "count!",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 2,
+          "name": "note_count!",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        null,
+        null
+      ]
     }
   }
 }

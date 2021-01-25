@@ -10,7 +10,7 @@ services:
       ports:
       - "8001:80"
       environment: 
-        DATABASE_URL: ${DATABASE_URL_DOCKER}
+        DATABASE_URL: ${DATABASE_URL_DOCKER_LOCAL}
       labels:
       - "traefik.enable=true"
       - "traefik.http.routers.tyserver-web.rule=Host(`ty.localhost`)"

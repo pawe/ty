@@ -8,7 +8,7 @@ fn main() {
     openssl_probe::init_ssl_cert_env_vars();
 
     let matches = App::new("ty - thank you")
-        .version("0.1")
+        .version("0.2.1")
         .author("Paul Weißenbach <paul.weissenbach@aon.at>")
         .about("Say thank you to the tools (and hopefully it's authors) you use by simply typing ty in your terminal.")
         .arg(Arg::with_name("TOOL")

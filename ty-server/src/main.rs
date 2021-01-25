@@ -5,11 +5,8 @@ use serde::de::DeserializeOwned;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::convert::Infallible;
 use std::env;
-use urlencoding::decode;
 use validator::Validate;
 use warp::{Filter, Rejection, Reply};
-
-use ty_lib::{ThankYouDetail, ThankYouMessage, ThankYouStats};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -55,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
             .and(warp::body::content_length_limit(4096))
             .and(with_db(db_pool.clone()))
             .and(validated_from_json())
-            .and_then(handle_post_ty_note)
+            .and_then(handlers::handle_post_ty_note)
             .recover(handle_rejection),
     );
 
@@ -63,17 +60,17 @@ async fn main() -> anyhow::Result<()> {
         warp::get().and(
             warp::path::end()
                 .and(with_db(db_pool.clone()))
-                .and_then(handle_info),
+                .and_then(handlers::handle_info),
         ),
     );
 
     let count = warp::path!("v0" / "tool" / String)
         .and(with_db(db_pool.clone()))
-        .and_then(handle_count);
+        .and_then(handlers::handle_count);
 
     let detail = warp::path!("v0" / "tool" / String / "detail")
         .and(with_db(db_pool.clone()))
-        .and_then(handle_detail);
+        .and_then(handlers::handle_detail);
 
     let port: u16 = env::var("PORT")
         .unwrap_or_else(|_| "8901".to_string())
@@ -141,118 +138,133 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, Rejection> {
         Err(err)
     }
 }
+mod handlers {
+    use http::StatusCode;
+    use sqlx::{Pool, Postgres};
+    use ty_lib::{ThankYouDetail, ThankYouMessage, ThankYouStats};
+    use urlencoding::decode;
+    use warp::{Rejection, Reply};
 
-async fn handle_post_ty_note(
-    pool: Pool<Postgres>,
-    ty_message: ThankYouMessage,
-) -> Result<impl Reply, Rejection> {
-    match sqlx::query!(
-        r#"
-            INSERT INTO ty (program, note)
-            VALUES ($1, $2)
-        "#,
-        ty_message.program,
-        ty_message.note
-    )
-    .execute(&pool)
-    .await
-    {
-        Ok(_) => Ok(warp::reply::with_status(
-            warp::reply::json(&""),
-            StatusCode::CREATED,
-        )),
-        Err(_) => Ok(warp::reply::with_status(
-            warp::reply::json(&""),
-            StatusCode::INTERNAL_SERVER_ERROR,
-        )),
-    }
-}
+    use crate::TYDatabaseError;
 
-async fn handle_count(program: String, pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
-    let program = match decode(&program) {
-        Ok(p) => p,
-        Err(err) => {
-            dbg!(err);
-            return Err(warp::reject::reject());
+    pub async fn handle_post_ty_note(
+        pool: Pool<Postgres>,
+        ty_message: ThankYouMessage,
+    ) -> Result<impl Reply, Rejection> {
+        match sqlx::query!(
+            r#"
+                INSERT INTO ty (program, note)
+                VALUES ($1, $2)
+            "#,
+            ty_message.program,
+            ty_message.note
+        )
+        .execute(&pool)
+        .await
+        {
+            Ok(_) => Ok(warp::reply::with_status(
+                warp::reply::json(&""),
+                StatusCode::CREATED,
+            )),
+            Err(_) => Ok(warp::reply::with_status(
+                warp::reply::json(&""),
+                StatusCode::INTERNAL_SERVER_ERROR,
+            )),
         }
-    };
-
-    let res = sqlx::query!(
-        r#"SELECT COUNT(*) as "count!" FROM ty WHERE program = $1"#,
-        program
-    )
-    .fetch_one(&pool)
-    .await;
-
-    if let Ok(rec) = res {
-        Ok(rec.count.to_string())
-    } else {
-        // that is not a proper way to handle errors!
-        Ok(0.to_string())
     }
-}
 
-async fn handle_info(pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
-    let res = sqlx::query_as!(
-        ThankYouStats,
-        r#"
-            select 
-                ty."program", 
-                count(*) as "count!", 
-                count(ty.note) as "note_count!"
-            from public.ty 
-            group by ty."program"
-            order by "count!" desc
-            limit 200;
-        "#
-    )
-    .fetch_all(&pool)
-    .await;
+    pub async fn handle_count(
+        program: String,
+        pool: Pool<Postgres>,
+    ) -> Result<impl Reply, Rejection> {
+        let program = match decode(&program) {
+            Ok(p) => p,
+            Err(err) => {
+                dbg!(err);
+                return Err(warp::reject::reject());
+            }
+        };
 
-    if let Ok(stats) = res {
-        Ok(warp::reply::with_status(
-            warp::reply::json(&stats),
-            StatusCode::OK,
-        ))
-    } else {
-        Err(warp::reject::custom(TYDatabaseError {}))
-    }
-}
+        let res = sqlx::query!(
+            r#"SELECT COUNT(*) as "count!" FROM ty WHERE program = $1"#,
+            program
+        )
+        .fetch_one(&pool)
+        .await;
 
-async fn handle_detail(program: String, pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
-    let program = match decode(&program) {
-        Ok(p) => p,
-        Err(err) => {
-            dbg!(err);
-            return Err(warp::reject::reject());
+        if let Ok(rec) = res {
+            Ok(rec.count.to_string())
+        } else {
+            // that is not a proper way to handle errors!
+            Ok(0.to_string())
         }
-    };
+    }
 
-    let res = sqlx::query!(
-        r#"
-            select ty.note as "note!"
-            from public.ty 
-            where ty.note is not null
-                and ty.program = $1
-            limit 200;
-        "#,
-        program
-    )
-    .fetch_all(&pool)
-    .await;
+    pub async fn handle_info(pool: Pool<Postgres>) -> Result<impl Reply, Rejection> {
+        let res = sqlx::query_as!(
+            ThankYouStats,
+            r#"
+                select 
+                    ty."program", 
+                    count(*) as "count!", 
+                    count(ty.note) as "note_count!"
+                from public.ty 
+                group by ty."program"
+                order by "count!" desc
+                limit 200;
+            "#
+        )
+        .fetch_all(&pool)
+        .await;
 
-    if let Ok(records) = res {
-        let notes = records.iter().map(|row| row.note.to_string()).collect();
+        if let Ok(stats) = res {
+            Ok(warp::reply::with_status(
+                warp::reply::json(&stats),
+                StatusCode::OK,
+            ))
+        } else {
+            Err(warp::reject::custom(TYDatabaseError {}))
+        }
+    }
 
-        let detail = ThankYouDetail { program, notes };
+    pub async fn handle_detail(
+        program: String,
+        pool: Pool<Postgres>,
+    ) -> Result<impl Reply, Rejection> {
+        let program = match decode(&program) {
+            Ok(p) => p,
+            Err(err) => {
+                dbg!(err);
+                return Err(warp::reject::reject());
+            }
+        };
 
-        Ok(warp::reply::with_status(
-            warp::reply::json(&detail),
-            StatusCode::OK,
-        ))
-    } else {
-        Err(warp::reject::reject())
-        // Ok(warp::reply::with_status(warp::reply::json(&""), StatusCode::INTERNAL_SERVER_ERROR))
+        let res = sqlx::query!(
+            r#"
+                select ty.note as "note!"
+                from public.ty 
+                where ty.note is not null
+                    and ty.program = $1
+                limit 200;
+            "#,
+            program
+        )
+        .fetch_all(&pool)
+        .await;
+
+        if let Ok(records) = res {
+            let notes = records.iter().map(|row| row.note.to_string()).collect();
+
+            let detail = ThankYouDetail { program, notes };
+
+            Ok(warp::reply::with_status(
+                warp::reply::json(&detail),
+                StatusCode::OK,
+            ))
+        } else {
+            Err(warp::reject::reject())
+            // Ok(warp::reply::with_status(warp::reply::json(&""), StatusCode::INTERNAL_SERVER_ERROR))
+        }
     }
 }
 

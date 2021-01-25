@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("seting up database failed");
 
-    let spa = warp::any().and(warp::fs::dir(
+    let index = warp::any().and(warp::fs::dir(
         env::var("STATIC_DIR").expect("STATIC_DIR expected in environment"),
     ));
 
@@ -47,43 +47,34 @@ async fn main() -> anyhow::Result<()> {
         ))
     });
 
-    let ty = warp::path("v0").and(warp::path("note")).and(
-        warp::post()
-            .and(warp::body::content_length_limit(4096))
+    let api = warp::path("note")
+        .and(warp::post())
+        .and(warp::body::content_length_limit(4096))
+        .and(with_db(db_pool.clone()))
+        .and(validated_from_json())
+        .and_then(handlers::handle_post_ty_note)
+        .recover(handle_rejection)
+        .or(warp::path::end()
+            .and(warp::get())
             .and(with_db(db_pool.clone()))
-            .and(validated_from_json())
-            .and_then(handlers::handle_post_ty_note)
-            .recover(handle_rejection),
-    );
+            .and_then(handlers::handle_info))
+        .or(warp::path!("tool" / String)
+            .and(with_db(db_pool.clone()))
+            .and_then(handlers::handle_count))
+        .or(warp::path!("tool" / String / "detail")
+            .and(with_db(db_pool.clone()))
+            .and_then(handlers::handle_detail));
 
-    let info = warp::path("v0").and(
-        warp::get().and(
-            warp::path::end()
-                .and(with_db(db_pool.clone()))
-                .and_then(handlers::handle_info),
-        ),
-    );
-
-    let count = warp::path!("v0" / "tool" / String)
-        .and(with_db(db_pool.clone()))
-        .and_then(handlers::handle_count);
-
-    let detail = warp::path!("v0" / "tool" / String / "detail")
-        .and(with_db(db_pool.clone()))
-        .and_then(handlers::handle_detail);
+    let ty_api_v0 = warp::path("v0").and(api);
 
     let port: u16 = env::var("PORT")
         .unwrap_or_else(|_| "8901".to_string())
         .parse()
         .expect("coudln't parse PORT into u16");
 
-    warp::serve(
-        warp::any()
-            .and(readme.or(ty).or(info).or(count).or(detail).or(spa))
-            .with(log),
-    )
-    .run(([0, 0, 0, 0], port))
-    .await;
+    warp::serve(warp::any().and(index.or(ty_api_v0).or(readme)).with(log))
+        .run(([0, 0, 0, 0], port))
+        .await;
 
     Ok(())
 }
@@ -138,6 +129,7 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, Rejection> {
         Err(err)
     }
 }
+
 mod handlers {
     use http::StatusCode;
     use sqlx::{Pool, Postgres};

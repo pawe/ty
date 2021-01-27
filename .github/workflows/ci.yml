@@ -16,6 +16,8 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
+        env:
+          TY_API_ENDPOINT: "https://ty.paulweissenbach.com/v0"
 
   test:
     name: Test Suite
@@ -32,6 +34,7 @@ jobs:
           command: test
         env:
           SQLX_OFFLINE: true
+          TY_API_ENDPOINT: "https://ty.paulweissenbach.com/v0"
 
   fmt:
     name: Rustfmt
@@ -48,6 +51,8 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
+        env:
+          TY_API_ENDPOINT: "https://ty.paulweissenbach.com/v0"
 
   clippy:
     name: Clippy
@@ -66,6 +71,7 @@ jobs:
           args: -- -D warnings
         env:
           SQLX_OFFLINE: true
+          TY_API_ENDPOINT: "https://ty.paulweissenbach.com/v0"
 
   build:
     needs: [check, test, fmt, clippy]

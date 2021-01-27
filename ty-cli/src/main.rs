@@ -1,10 +1,12 @@
 extern crate clap;
 use clap::{App, Arg};
-use dotenv::dotenv;
+use load_dotenv::load_dotenv;
+
 use ty_lib::ThankYouMessage;
 
+load_dotenv!();
 fn main() {
-    dotenv().ok();
+
     openssl_probe::init_ssl_cert_env_vars();
 
     let matches = App::new("ty - thank you")
@@ -52,11 +54,7 @@ fn main() {
 }
 
 fn send_ty_note(message: ThankYouMessage) {
-    // TODO: think of how to keep it flexible for development
-    let endpoint = match &std::env::var("TY_API_ENDPOINT") {
-        Ok(env_var) => env_var.clone(),
-        _ => "https://ty.paulweissenbach.com/v0".to_string(),
-    };
+    let endpoint = std::env!("TY_API_ENDPOINT", "needs TY_API_ENDPOINT in enviroment to compile").to_string();
 
     let response = reqwest::blocking::Client::new()
         .post(&(endpoint + "/note"))

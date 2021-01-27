@@ -18,3 +18,4 @@ reqwest = { version = "0.10", features = ["blocking", "json"] }
 openssl = { version = "0.10", features = ["vendored"] }
 openssl-probe = "0.1.2"
 validator = "0.12"
+load-dotenv = "0.1.2"

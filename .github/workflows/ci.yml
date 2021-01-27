@@ -82,6 +82,8 @@ jobs:
         with:
           command: build
           args: -p ty --release
+        env:
+          TY_API_ENDPOINT: "https://ty.paulweissenbach.com/v0"
       - name: Strip
         run: strip target/release/ty
       - name: Release
@@ -107,7 +109,8 @@ jobs:
         with:
           command: build
           args: -p ty --release
-      
+        env:
+          TY_API_ENDPOINT: "https://ty.paulweissenbach.com/v0"
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')

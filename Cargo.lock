@@ -946,6 +946,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1482821306169ec4d07f6aca392a4681f66c75c9918aa49641a2595db64053cb"
 
 [[package]]
+name = "load-dotenv"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71abcf6d8da2a6c163554a61cdbca2438bbe9e687a9c5ebeee12e9af42864b54"
+dependencies = [
+ "dotenv",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2308,6 +2317,7 @@ version = "0.2.1"
 dependencies = [
  "clap",
  "dotenv",
+ "load-dotenv",
  "openssl",
  "openssl-probe",
  "reqwest",

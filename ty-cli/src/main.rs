@@ -1,10 +1,10 @@
 extern crate clap;
 use clap::{App, Arg};
-use load_dotenv::load_dotenv;
+use load_dotenv::try_load_dotenv;
 
 use ty_lib::ThankYouMessage;
 
-load_dotenv!();
+try_load_dotenv!();
 fn main() {
     openssl_probe::init_ssl_cert_env_vars();
 

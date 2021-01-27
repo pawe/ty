@@ -35,14 +35,14 @@ If you just want to thank the last completed command, this is alias will do the
 trick. 
 
 ```bash
-alias ty='ty `history -p \!:0`'
+alias ta='ty `history -p \!:0`'
 ```
 
 ```bash
 $ cargo build --release 
     Compiling ...
     Finished release [optimized] target(s) in 12.04s
-$ ty
+$ ta
 ```
 
 Here, the `ty` becomes `ty cargo` since history expands !:0 to the first token 
